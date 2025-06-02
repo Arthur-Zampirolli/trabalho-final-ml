@@ -15,7 +15,7 @@ def check_and_save_null_values(dataset, output_dir):
       file.write("\n")
 
 @click.command()
-@click.argument('output_dir')
+@click.option('--output-dir', default='.', help='Directory to save output files')
 def main(output_dir):
   dataset = db.load_dataset()
   check_and_save_null_values(dataset, output_dir)
