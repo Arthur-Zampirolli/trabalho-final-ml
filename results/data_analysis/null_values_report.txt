@@ -1,0 +1,98 @@
+Null values in transfers (Total entries: 8872):
+  player_id: 0 null values
+  transfer_date: 0 null values
+  transfer_season: 0 null values
+  from_club_id: 0 null values
+  to_club_id: 0 null values
+  transfer_fee: 0 null values
+  market_value_in_eur: 0 null values
+
+Null values in appearances (Total entries: 669770):
+  appearance_id: 0 null values
+  game_id: 0 null values
+  player_id: 0 null values
+  player_club_id: 0 null values
+  player_current_club_id: 0 null values
+  date: 0 null values
+  competition_id: 0 null values
+  yellow_cards: 0 null values
+  red_cards: 0 null values
+  goals: 0 null values
+  assists: 0 null values
+  minutes_played: 0 null values
+
+Null values in players (Total entries: 5027):
+  player_id: 0 null values
+  last_season: 0 null values
+  current_club_id: 0 null values
+  country_of_birth: 0 null values
+  city_of_birth: 0 null values
+  country_of_citizenship: 0 null values
+  date_of_birth: 0 null values
+  sub_position: 0 null values
+  position: 0 null values
+  foot: 0 null values
+  height_in_cm: 0 null values
+  contract_expiration_date: 0 null values
+  agent_name: 0 null values
+  current_club_domestic_competition_id: 0 null values
+  current_club_name: 0 null values
+  market_value_in_eur: 0 null values
+  highest_market_value_in_eur: 0 null values
+
+Null values in clubs (Total entries: 439):
+  club_id: 0 null values
+  domestic_competition_id: 0 null values
+  squad_size: 0 null values
+  average_age: 0 null values
+  foreigners_number: 0 null values
+  foreigners_percentage: 0 null values
+  national_team_players: 0 null values
+  stadium_seats: 0 null values
+  net_transfer_record: 0 null values
+  coach_name: 0 null values
+  last_season: 0 null values
+
+Null values in competitions (Total entries: 44):
+  competition_id: 0 null values
+  sub_type: 0 null values
+  type: 0 null values
+  country_id: 0 null values
+  domestic_league_code: 0 null values
+  confederation: 0 null values
+  is_major_national_league: 0 null values
+
+Null values in game_events (Total entries: 447842):
+  game_event_id: 0 null values
+  date: 0 null values
+  game_id: 0 null values
+  minute: 0 null values
+  type: 0 null values
+  club_id: 0 null values
+  player_id: 0 null values
+  player_in_id: 0 null values
+  player_assist_id: 0 null values
+
+Null values in games (Total entries: 74014):
+  game_id: 0 null values
+  competition_id: 0 null values
+  season: 0 null values
+  date: 0 null values
+  home_club_id: 0 null values
+  away_club_id: 0 null values
+  home_club_goals: 0 null values
+  away_club_goals: 0 null values
+  home_club_position: 0 null values
+  away_club_position: 0 null values
+  home_club_manager_name: 0 null values
+  away_club_manager_name: 0 null values
+  attendance: 0 null values
+  competition_type: 0 null values
+
+Null values in player_valuations (Total entries: 105354):
+  player_id: 0 null values
+  date: 0 null values
+  market_value_in_eur: 0 null values
+  current_club_id: 0 null values
+  player_club_domestic_competition_id: 0 null values
+
