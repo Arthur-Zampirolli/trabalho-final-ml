@@ -1,2 +1,3 @@
 venv/*
 database/*
+data_analysis/game_data_analysis/env/
