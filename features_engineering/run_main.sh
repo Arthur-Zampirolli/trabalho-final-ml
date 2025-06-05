@@ -1,6 +1,6 @@
 #!/bin/bash
 
-OUTPUT_DIR="./../results/data_analysis"
+OUTPUT_DIR="./../results/features_engineering"
 
 export PYTHONPATH=./../
 

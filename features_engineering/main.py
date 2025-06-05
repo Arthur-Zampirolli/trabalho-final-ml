@@ -4,23 +4,23 @@ import click
 import pandas as pd
 import featuretools as ft
 import woodwork.logical_types as ww
-
+from featuretools import save_features
 from featuretools.selection import (
-    remove_low_information_features,
-    remove_highly_correlated_features,
-    remove_highly_null_features,
-    remove_single_value_features
+  remove_low_information_features,
+  remove_highly_correlated_features,
+  remove_highly_null_features,
+  remove_single_value_features
 )
 
 from load_dataset import load_dataset
 
 warnings.filterwarnings(
-    "ignore",
-    category=FutureWarning
+  "ignore",
+  category=FutureWarning
 )
 warnings.filterwarnings(
-    "ignore",
-    message="Could not infer format, so each element will be parsed individually, falling back to `dateutil`."
+  "ignore",
+  message="Could not infer format, so each element will be parsed individually, falling back to `dateutil`."
 )
 
 def run_feature_engineering(output_dir):
@@ -37,13 +37,13 @@ def run_feature_engineering(output_dir):
   player_valuations_df = dataset['player_valuations'].copy()
 
   # Convert all date columns to datetime
-  transfers_df['transfer_date'] = pd.to_datetime(transfers_df['transfer_date'])
-  players_df['date_of_birth'] = pd.to_datetime(players_df['date_of_birth'])
-  players_df['contract_expiration_date'] = pd.to_datetime(players_df['contract_expiration_date'])
-  appearances_df['date'] = pd.to_datetime(appearances_df['date'])
-  games_df['date'] = pd.to_datetime(games_df['date'])
-  game_events_df['date'] = pd.to_datetime(game_events_df['date'])
-  player_valuations_df['date'] = pd.to_datetime(player_valuations_df['date'])
+  transfers_df['transfer_date'] = pd.to_datetime(transfers_df['transfer_date'], format='%Y-%m-%d')
+  players_df['date_of_birth'] = pd.to_datetime(players_df['date_of_birth'], format='%Y-%m-%d')
+  players_df['contract_expiration_date'] = pd.to_datetime(players_df['contract_expiration_date'], format='%Y-%m-%d')
+  appearances_df['date'] = pd.to_datetime(appearances_df['date'], format='%Y-%m-%d')
+  games_df['date'] = pd.to_datetime(games_df['date'], format='%Y-%m-%d')
+  game_events_df['date'] = pd.to_datetime(game_events_df['date'], format='%Y-%m-%d')
+  player_valuations_df['date'] = pd.to_datetime(player_valuations_df['date'], format='%Y-%m-%d')
 
   # Create EntitySet
   es = ft.EntitySet(id='transfer_fee_prediction')
@@ -180,7 +180,7 @@ def run_feature_engineering(output_dir):
     try:
       es = es.add_relationship(**rel)
     except Exception as e:
-      print(f"Erro ao adicionar relacionamento: {rel} -> {e}")
+      print(f"Error adding relationship: {rel} -> {e}")
 
   # Compute last_time_indexes
   es.add_last_time_indexes([
@@ -191,20 +191,21 @@ def run_feature_engineering(output_dir):
     'player_valuations',
   ])
 
+  save_progress_path = f'{output_dir}/transfer_features_aux'
+
   # Generate features using Deep Feature Synthesis
   feature_matrix, feature_defs = ft.dfs(
     entityset=es,
     target_dataframe_name='transfers',
     cutoff_time=cutoff_df,
     cutoff_time_in_index=True,
-    agg_primitives=[
-        'sum', 'mean', 'max', 'min', 'count', 'num_unique', 
-    ],
+    agg_primitives=['sum', 'mean', 'max', 'min', 'count', 'num_unique'],
     trans_primitives=['year', 'month', 'day', 'weekday'],
     max_depth=2,
     features_only=False,
     verbose=True,
-    training_window=ft.Timedelta(365*10, 'days')  # 10 years historical data
+    training_window=ft.Timedelta(365*10, 'days'),  # 10 years historical data
+    save_progress=save_progress_path
   )
 
   # Reset index to access transfer_id and transfer_date
@@ -212,13 +213,25 @@ def run_feature_engineering(output_dir):
   feature_matrix.rename(columns={'level_0': 'transfer_id'}, inplace=True)
 
   # Feature selection/cleaning
-  feature_matrix = remove_low_information_features(feature_matrix)
-  feature_matrix = remove_highly_correlated_features(feature_matrix)
-  feature_matrix = remove_highly_null_features(feature_matrix)
-  feature_matrix = remove_single_value_features(feature_matrix)
+  feature_matrix, feature_defs = remove_low_information_features(feature_matrix, features=feature_defs)
+  feature_matrix, feature_defs = remove_highly_correlated_features(feature_matrix, features=feature_defs )
+  feature_matrix, feature_defs = remove_highly_null_features(feature_matrix, features=feature_defs)
+  feature_matrix, feature_defs = remove_single_value_features(feature_matrix, features=feature_defs)
 
-  # Save results
+  # Encode categorical features
+  feature_matrix_encoded, feature_defs_encoded = ft.encode_features(
+    feature_matrix,
+    feature_defs,
+  )
+
+  # Save features using featuretools.save_features
+  save_features(feature_defs, f'{output_dir}/transfer_features.json')
+  # Save feature matrix as CSV
   feature_matrix.to_csv(f'{output_dir}/transfer_features.csv', index=False)
+  # Save encoded features using featuretools.save_features
+  save_features(feature_defs_encoded, f'{output_dir}/transfer_features_encoded.json')
+  # Save encoded feature matrix as CSV
+  feature_matrix_encoded.to_csv(f'{output_dir}/transfer_features_encoded.csv', index=False)
 
   print("Feature engineering completed!")
   print(f"Generated {len(feature_defs)} features")
