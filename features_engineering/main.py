@@ -221,19 +221,19 @@ def run_feature_engineering(output_dir):
             'transfers'
         ).rename('players.total_appearances_count'),
 
-        ft.DirectFeature(
-            ft.Feature(
-                es['appearances'].ww['appearance_id'],
-                parent_dataframe_name='players',
-                primitive=Count()
-                where=ft.Feature(
-                    es['appearances'].ww['date'],
-                    parent_dataframe_name='transfers',
-                    primitive=Equal()
-                )
-            ),
-            'transfers'
-        ).rename('players.total_appearances_count'),
+        # ft.DirectFeature(
+        #     ft.Feature(
+        #         es['appearances'].ww['appearance_id'],
+        #         parent_dataframe_name='players',
+        #         primitive=Count()
+        #         where=ft.Feature(
+        #             es['appearances'].ww['date'],
+        #             parent_dataframe_name='transfers',
+        #             primitive=Equal()
+        #         )
+        #     ),
+        #     'transfers'
+        # ).rename('players.total_appearances_count'),
 
     ]
 

@@ -189,7 +189,7 @@ def load_appearances(dataset_path, players_df=None, games_df=None):
   # Add season from game season
   if games_df is not None:
     appearances_df = appearances_df.merge(
-      games_df[['game_id', 'season']],
+      games_df[['game_id', 'season', 'attendance']],
       on='game_id',
       how='left'
     )
