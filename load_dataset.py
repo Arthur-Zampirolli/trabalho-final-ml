@@ -2,6 +2,13 @@ import os
 import kagglehub
 import pandas as pd
 
+# Convert transfer_season from 'YY/YY' to numeric (e.g., '26/27' -> 2026)
+def season_to_year(season_str):
+    # Take the first two digits and convert to int
+    year = int(season_str[:2])
+    # If year < 50, assume 2000s, else 1900s (handles up to '49/50')
+    return 2000 + year if year < 50 else 1900 + year
+
 def to_category(series, categories, missing_value_category="Missing"):
   """
   Convert a pandas Series to a categorical type with specified categories.
@@ -44,6 +51,7 @@ def load_transfers(dataset_path):
     }
   )
 
+  
   # Filter only transfers with transfer_fee and market_value_in_eur not null and greater than 0
   transfers_df = transfers_df[
     transfers_df["transfer_fee"].notnull() & 
@@ -52,6 +60,8 @@ def load_transfers(dataset_path):
     (transfers_df["market_value_in_eur"] > 0)
   ]
 
+  transfers_df["transfer_season"] = transfers_df["transfer_season"].apply(season_to_year)
+  
   return transfers_df
 
 def load_players(dataset_path, transfers_df=None):
@@ -128,13 +138,15 @@ def load_players(dataset_path, transfers_df=None):
   players_df["foot"] = players_df["foot"].replace({"left": "Left", "right": "Right", "both": "Both"})
   players_df["foot"] = to_category(players_df["foot"], missing_value_category="Missing", categories=["Left", "Right", "Both", "Missing"])
 
+  players_df["last_season"] = players_df["last_season"].apply(season_to_year)
+
   if transfers_df is not None:
     transferred_player_ids = transfers_df["player_id"].unique()
     players_df = players_df[players_df["player_id"].isin(transferred_player_ids)]
 
   return players_df
 
-def load_appearances(dataset_path, players_df=None):
+def load_appearances(dataset_path, players_df=None, games_df=None):
   appearances_df = pd.read_csv(
     os.path.join(dataset_path, "appearances.csv"),
     parse_dates=["date"],
@@ -173,6 +185,14 @@ def load_appearances(dataset_path, players_df=None):
   if players_df is not None:
     current_player_ids = players_df["player_id"].unique()
     appearances_df = appearances_df[appearances_df["player_id"].isin(current_player_ids)]
+
+  # Add season from game season
+  if games_df is not None:
+    appearances_df = appearances_df.merge(
+      games_df[['game_id', 'season']],
+      on='game_id',
+      how='left'
+    )
 
   return appearances_df
 
@@ -232,6 +252,8 @@ def load_clubs(dataset_path):
   clubs_df['foreigners_percentage'] = clubs_df['foreigners_percentage'].fillna(
     clubs_df['foreigners_number'] / clubs_df['squad_size'] * 100
   ).fillna(0)
+
+  clubs_df["last_season"] = clubs_df["last_season"].apply(season_to_year)
 
   return clubs_df
 
@@ -461,7 +483,7 @@ def load_dataset() :
   games_df = load_games(path)
 
   players_df = load_players(path, transfers_df=transfers_df)
-  appearances_df = load_appearances(path, players_df=players_df)
+  appearances_df = load_appearances(path, players_df=players_df, games_df=games_df)
   game_events_df = load_game_events(path, players_df=players_df)
   player_valuations_df = load_player_valuations(path, players_df=players_df)
 
