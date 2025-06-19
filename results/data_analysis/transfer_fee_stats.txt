@@ -1,0 +1,6 @@
+Max transfer_fee: 180000000.0
+Min transfer_fee: 500.0
+Average transfer_fee: 6456651.036970244
+Std deviation transfer_fee: 11271100.995806089
+MSE between transfer_fee and market_value_in_eur: 30187335016399.906
+RMSE between transfer_fee and market_value_in_eur: 5494300.229910986

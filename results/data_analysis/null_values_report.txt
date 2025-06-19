@@ -20,6 +20,8 @@ Null values in appearances (Total entries: 669770):
   goals: 0 null values
   assists: 0 null values
   minutes_played: 0 null values
+  season: 0 null values
+  attendance: 0 null values
 
 Null values in players (Total entries: 5027):
   player_id: 0 null values

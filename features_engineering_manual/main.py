@@ -1,4 +1,5 @@
 import os
+import re
 import click
 import warnings
 
@@ -25,6 +26,7 @@ def run_feature_engineering(output_dir, current_file=None):
     players_df = dataset['players'].copy()
     appearances_df = dataset['appearances'].copy()
     player_valuations_df = dataset['player_valuations'].copy()
+    clubs_df = dataset['clubs'].copy()
 
     # Convert all date columns to datetime
     transfers_df['transfer_date'] = pd.to_datetime(transfers_df['transfer_date'], format='%Y-%m-%d')
@@ -523,7 +525,299 @@ def run_feature_engineering(output_dir, current_file=None):
             axis=1
         ).fillna(-1)
     )
-   
+    ## Highest valuation before transfer (player_valuations.market_value_in_eur)
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'player_avg_valuation',
+        lambda df: df.apply(
+            lambda row: player_valuations_df[
+                (player_valuations_df['player_id'] == row['player_id']) &
+                (player_valuations_df['date'] < pd.to_datetime(row['transfer_date']))
+            ]['market_value_in_eur'].mean(),
+            axis=1
+        ).fillna(-1)
+    )
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'player_avg_valuation_last_year',
+        lambda df: df.apply(
+            lambda row: player_valuations_df[
+                (player_valuations_df['player_id'] == row['player_id']) &
+                (player_valuations_df['date'] < pd.to_datetime(row['transfer_date'])) &
+                (player_valuations_df['date'] >= pd.to_datetime(row['transfer_date']) - pd.DateOffset(years=1))
+            ]['market_value_in_eur'].mean(),
+            axis=1
+        ).fillna(-1)
+    )
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'player_avg_valuation_last_3_years',
+        lambda df: df.apply(
+            lambda row: player_valuations_df[
+                (player_valuations_df['player_id'] == row['player_id']) &
+                (player_valuations_df['date'] < pd.to_datetime(row['transfer_date'])) &
+                (player_valuations_df['date'] >= pd.to_datetime(row['transfer_date']) - pd.DateOffset(years=3))
+            ]['market_value_in_eur'].mean(),
+            axis=1
+        ).fillna(-1)
+    )
+
+    # Join club
+    ## Club domestic_competition_id (transfers.from_club_id == clubs.club_id)
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'from_club_domestic_competition_id',
+        lambda df: df.apply(
+            lambda row: clubs_df[
+                clubs_df['club_id'] == row['from_club_id']
+            ]['domestic_competition_id'].values[0]
+            if not clubs_df[clubs_df['club_id'] == row['from_club_id']].empty else -1,
+            axis=1
+        ).fillna(-1)
+    )
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'to_club_domestic_competition_id',
+        lambda df: df.apply(
+            lambda row: clubs_df[
+                clubs_df['club_id'] == row['to_club_id']
+            ]['domestic_competition_id'].values[0]
+            if not clubs_df[clubs_df['club_id'] == row['to_club_id']].empty else -1,
+            axis=1
+        ).fillna(-1)
+    )
+    ## Club national_team_players (transfers.from_club_id == clubs.club_id)
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'from_club_national_team_players',
+        lambda df: df.apply(
+            lambda row: clubs_df[
+                clubs_df['club_id'] == row['from_club_id']
+            ]['national_team_players'].values[0]
+            if not clubs_df[clubs_df['club_id'] == row['from_club_id']].empty else -1,
+            axis=1
+        ).fillna(-1)
+    )
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'to_club_national_team_players',
+        lambda df: df.apply(
+            lambda row: clubs_df[
+                clubs_df['club_id'] == row['to_club_id']
+            ]['national_team_players'].values[0]
+            if not clubs_df[clubs_df['club_id'] == row['to_club_id']].empty else -1,
+            axis=1
+        ).fillna(-1)
+    )
+    ## Club net_transfer_record (transfers.from_club_id == clubs.club_id)
+    def parse_net_transfer_record(value):
+        if pd.isna(value):
+            return 0.0
+        if value in ['+-0', '+-0.0', '+-0']:
+            return 0.0
+        # Remove spaces
+        value = str(value).replace(' ', '')
+        # Regex to extract sign, euro symbol, number, and multiplier
+        match = re.match(r'([+-]?)€?([+-]?)?([\d.,]+)([mk]?)', value, re.IGNORECASE)
+        if not match:
+            return 0.0
+        sign1, sign2, number, multiplier = match.groups()
+        sign = -1 if '-' in (sign1 + sign2) else 1
+        number = float(number.replace('.', '').replace(',', '.'))
+        if multiplier.lower() == 'm':
+            number *= 1_000_000
+        elif multiplier.lower() == 'k':
+            number *= 1_000
+        return sign * number
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'from_club_net_transfer_record',
+        lambda df: df.apply(
+            lambda row: parse_net_transfer_record(
+                clubs_df[clubs_df['club_id'] == row['from_club_id']]['net_transfer_record'].values[0]
+            ) if not clubs_df[clubs_df['club_id'] == row['from_club_id']].empty else 0.0,
+            axis=1
+        ).fillna(0.0)
+    )
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'to_club_net_transfer_record',
+        lambda df: df.apply(
+            lambda row: parse_net_transfer_record(
+                clubs_df[clubs_df['club_id'] == row['to_club_id']]['net_transfer_record'].values[0]
+            ) if not clubs_df[clubs_df['club_id'] == row['to_club_id']].empty else 0.0,
+            axis=1
+        ).fillna(0.0)
+    )
+    ## Club average_age (transfers.from_club_id == clubs.club_id)
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'from_club_average_age',
+        lambda df: df.apply(
+            lambda row: clubs_df[
+                clubs_df['club_id'] == row['from_club_id']
+            ]['average_age'].values[0]
+            if not clubs_df[clubs_df['club_id'] == row['from_club_id']].empty else -1,
+            axis=1
+        ).fillna(-1)
+    )
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'to_club_average_age',
+        lambda df: df.apply(
+            lambda row: clubs_df[
+                clubs_df['club_id'] == row['to_club_id']
+            ]['average_age'].values[0]
+            if not clubs_df[clubs_df['club_id'] == row['to_club_id']].empty else -1,
+            axis=1
+        ).fillna(-1)
+    )
+    ## Club stadium_seats (transfers.from_club_id == clubs.club_id)
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'from_club_stadium_seats',
+        lambda df: df.apply(
+            lambda row: clubs_df[
+                clubs_df['club_id'] == row['from_club_id']
+            ]['stadium_seats'].values[0]
+            if not clubs_df[clubs_df['club_id'] == row['from_club_id']].empty else -1,
+            axis=1
+        ).fillna(-1)
+    )
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'to_club_stadium_seats',
+        lambda df: df.apply(
+            lambda row: clubs_df[
+                clubs_df['club_id'] == row['to_club_id']
+            ]['stadium_seats'].values[0]
+            if not clubs_df[clubs_df['club_id'] == row['to_club_id']].empty else -1,
+            axis=1
+        ).fillna(-1)
+    )
+    ## Club squad_size (transfers.from_club_id == clubs.club_id)
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'from_club_squad_size',
+        lambda df: df.apply(
+            lambda row: clubs_df[
+                clubs_df['club_id'] == row['from_club_id']
+            ]['squad_size'].values[0]
+            if not clubs_df[clubs_df['club_id'] == row['from_club_id']].empty else -1,
+            axis=1
+        ).fillna(-1)
+    )
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'to_club_squad_size',
+        lambda df: df.apply(
+            lambda row: clubs_df[
+                clubs_df['club_id'] == row['to_club_id']
+            ]['squad_size'].values[0]
+            if not clubs_df[clubs_df['club_id'] == row['to_club_id']].empty else -1,
+            axis=1
+        ).fillna(-1)
+    )
+    ## Club is top national leagues and cups: LaLiga, Premiere, Ligue 1, Serie A e Bundesliga (transfers.from_club_id == clubs.club_id)
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'from_club_is_top_national',
+        lambda df: df.apply(
+            lambda row: (
+                1 if (
+                    not clubs_df[clubs_df['club_id'] == row['from_club_id']].empty and
+                    clubs_df[clubs_df['club_id'] == row['from_club_id']]['domestic_competition_id'].values[0] in [
+                        'ES1', 'FR1', 'IT1', 'GB1', 'L1' # Leagues
+                    ]
+                ) else 0
+            ),
+            axis=1
+        ).fillna(0)
+    )
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'to_club_is_top_national',
+        lambda df: df.apply(
+            lambda row: (
+                1 if (
+                    not clubs_df[clubs_df['club_id'] == row['to_club_id']].empty and
+                    clubs_df[clubs_df['club_id'] == row['to_club_id']]['domestic_competition_id'].values[0] in [
+                        'ES1', 'FR1', 'IT1', 'GB1', 'L1' # Leagues
+                    ]
+                ) else 0
+            ),
+            axis=1
+        ).fillna(0)
+    )
+
+    # Club transfers features
+    ## Number of transfers from club to club (transfers.from_club_id == transfers.to_club_id)
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'from_club_to_club_transfers',
+        lambda df: df.apply(
+            lambda row: transfers_df[
+                (transfers_df['from_club_id'] == row['from_club_id']) &
+                (transfers_df['to_club_id'] == row['to_club_id']) &
+                (transfers_df['transfer_date'] < pd.to_datetime(row['transfer_date']))
+            ].shape[0],
+            axis=1
+        ).fillna(0)
+    )
+    ## Average transfer(transfers.from_club_id == transfers.to_club_id)
+    ## Average transfer value from club to club (transfers.from_club_id == transfers.to_club_id)
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'from_club_avg_sell_value',
+        lambda df: df.apply(
+            lambda row: transfers_df[
+                (transfers_df['from_club_id'] == row['from_club_id']) &
+                (transfers_df['transfer_date'] < pd.to_datetime(row['transfer_date']))
+            ]['market_value_in_eur'].mean(),
+            axis=1
+        ).fillna(-1)
+    )
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'to_club_avg_buy_value',
+        lambda df: df.apply(
+            lambda row: transfers_df[
+                (transfers_df['to_club_id'] == row['to_club_id']) &
+                (transfers_df['transfer_date'] < pd.to_datetime(row['transfer_date']))
+            ]['market_value_in_eur'].mean(),
+            axis=1
+        ).fillna(-1)
+    )
+    ## Average transfer value per player position from club to club (transfers.from_club_id == transfers.to_club_id)
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'from_club_avg_sell_value_same_position',
+        lambda df: df.apply(
+            lambda row: transfers_df[
+                (transfers_df['from_club_id'] == row['from_club_id']) &
+                (transfers_df['transfer_date'] < pd.to_datetime(row['transfer_date'])) &
+                (transfers_df['player_id'].isin(
+                    players_df[players_df['position'] == row['player_position']]['player_id']
+                ))
+            ]['market_value_in_eur'].mean(),
+            axis=1
+        ).fillna(-1)
+    )
+    validate_and_add_feature(
+        feature_engineered_transfers,
+        'to_club_avg_buy_value_same_position',
+        lambda df: df.apply(
+            lambda row: transfers_df[
+                (transfers_df['to_club_id'] == row['to_club_id']) &
+                (transfers_df['transfer_date'] < pd.to_datetime(row['transfer_date'])) &
+                (transfers_df['player_id'].isin(
+                    players_df[players_df['position'] == row['player_position']]['player_id']
+                ))
+            ]['market_value_in_eur'].mean(),
+            axis=1
+        ).fillna(-1)
+    )
+
     # Define the output file path
     output_file_path = f"{output_dir}/feature_engineered_transfers.csv"
     # Save the updated DataFrame to the CSV file
