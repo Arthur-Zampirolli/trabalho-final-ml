@@ -29,6 +29,11 @@ def fetch_basic_metrics(dataset, output_dir='.'):
   std_fee = valid_transfers['transfer_fee'].std()
   mse = np.mean((valid_transfers['transfer_fee'] - valid_transfers['market_value_in_eur']) ** 2)
   rmse = np.sqrt(mse)
+  mae = np.mean(np.abs(valid_transfers['transfer_fee'] - valid_transfers['market_value_in_eur']))
+  # R2 score calculation
+  ss_res = np.sum((valid_transfers['transfer_fee'] - valid_transfers['market_value_in_eur']) ** 2)
+  ss_tot = np.sum((valid_transfers['transfer_fee'] - valid_transfers['transfer_fee'].mean()) ** 2)
+  r2_score = 1 - (ss_res / ss_tot if ss_tot != 0 else 0)
 
   # Save results to txt
   with open(os.path.join(output_dir, "transfer_fee_stats.txt"), "w") as file:
@@ -38,6 +43,8 @@ def fetch_basic_metrics(dataset, output_dir='.'):
       file.write(f"Std deviation transfer_fee: {std_fee}\n")
       file.write(f"MSE between transfer_fee and market_value_in_eur: {mse}\n")
       file.write(f"RMSE between transfer_fee and market_value_in_eur: {rmse}\n")
+      file.write(f"MAE between transfer_fee and market_value_in_eur: {mae}\n")
+      file.write(f"R2 score between transfer_fee and market_value_in_eur: {r2_score}\n")
 
   return {
       "max_transfer_fee": max_fee,

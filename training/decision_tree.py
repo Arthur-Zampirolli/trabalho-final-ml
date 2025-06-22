@@ -1,24 +1,42 @@
+import os
 import click
 import numpy as np
 import pandas as pd
-
-from sklearn.feature_selection import RFECV
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
-
-from load_training_table import load_training_table
-import os
-from sklearn import tree
-from sklearn.model_selection import GridSearchCV
-
 import matplotlib.pyplot as plt
 
+from sklearn import tree
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
+from sklearn.feature_selection import RFECV
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import mean_absolute_error, r2_score
+
+from codecarbon import EmissionsTracker
+
+from load_training_table import load_training_table
+
 def run_decision_tree(target_column, output_dir):
+  # Start CodeCarbon tracker
+  tracker = EmissionsTracker(output_dir=output_dir, measure_power_secs=1, log_level="error")
+  tracker.start()
+
   # Load dataset
   data = load_training_table("../results/features_engineering_manual/feature_engineered_transfers.csv", category_encode=True)
   X = data.drop(columns=[target_column])
   y = data[target_column]
+
+  # Drop valuation columns if they exist
+  columns_to_drop = [
+    "player_last_valuation",
+    "player_highest_valuation",
+    "player_highest_valuation_last_year",
+    "player_highest_valuation_last_3_years",
+    "player_avg_valuation",
+    "player_avg_valuation_last_year",
+    "player_avg_valuation_last_3_years"
+  ]
+  X = X.drop(columns=[col for col in columns_to_drop if col in X.columns])
 
   # Split data into training and testing sets
   X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -49,11 +67,32 @@ def run_decision_tree(target_column, output_dir):
 
   # Print the best hyperparameters
   print(f"Best hyperparameters: {grid_search.best_params_}")
+
+  # Stop CodeCarbon tracker and get emissions/energy data
+  emissions_data = tracker.stop()
+
   # Calculate Mean Squared Error
   mse = mean_squared_error(y_test, y_pred)
   print(f"Mean Squared Error on test set: {mse}")
   rmse = np.sqrt(mse)
   print(f"RMSE: {rmse}")
+  # Calculate Mean Absolute Error
+  mae = mean_absolute_error(y_test, y_pred)
+  print(f"MAE: {mae}")
+  # Calculate R-squared
+  r2 = r2_score(y_test, y_pred)
+  print(f"R-squared: {r2}")
+
+  # Save metrics and emissions to a txt file
+  os.makedirs(output_dir, exist_ok=True)
+  metrics_path = os.path.join(output_dir, "decision_tree_metrics.txt")
+  with open(metrics_path, "w") as f:
+      f.write(f"Best hyperparameters: {grid_search.best_params_}\n")
+      f.write(f"Mean Squared Error on test set: {mse}\n")
+      f.write(f"RMSE: {rmse}\n")
+      f.write(f"MAE: {mae}\n")
+      f.write(f"R-squared: {r2}\n")
+  print(f"Metrics saved to {metrics_path}")
 
   # Save decision tree image
   os.makedirs(output_dir, exist_ok=True)
@@ -93,6 +132,25 @@ def run_decision_tree(target_column, output_dir):
   plt.savefig(bar_chart_path, dpi=200, bbox_inches='tight')
   plt.close()
   print(f"Bar chart of predicted vs true values saved to {bar_chart_path}")
+
+  fig, ax = plt.subplots(figsize=(70, 40))
+  tree.plot_tree(
+      regressor,
+      feature_names=X.columns,
+      filled=True,
+      ax=ax,
+      fontsize=20,  # Even larger font for readability
+      rounded=True,
+      precision=2,
+      proportion=False,
+      impurity=False,
+      label='all'
+  )
+  plt.tight_layout(pad=20.0)  # Use a smaller padding to reduce overlap
+  image_path = os.path.join(output_dir, "decision_tree.png")
+  plt.savefig(image_path, dpi=400, bbox_inches='tight')  # Higher DPI for clarity
+  plt.close(fig)
+  print(f"Decision tree saved to {image_path}")
 
 @click.command()
 @click.option('--target-column', default='transfer_fee', help='Target column for feature selection')

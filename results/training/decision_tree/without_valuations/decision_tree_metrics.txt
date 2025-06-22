@@ -1,0 +1,5 @@
+Best hyperparameters: {'max_depth': 5, 'max_features': None, 'min_samples_leaf': 4, 'min_samples_split': 2}
+Mean Squared Error on test set: 57542443942261.65
+RMSE: 7585673.598452655
+MAE: 4039862.2155768806
+R-squared: 0.513565531571566

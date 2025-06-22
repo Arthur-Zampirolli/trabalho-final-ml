@@ -1,0 +1,8 @@
+click==8.1.8
+pandas==2.2.3
+kagglehub==0.3.12
+scikit-learn==1.6.1
+featuretools==1.31.0
+setuptools==80.9.0
+featuretools[dask]==1.31.0
+codecarbon==3.0.2
