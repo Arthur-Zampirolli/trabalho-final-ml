@@ -1,0 +1,133 @@
+Null values (Total entries: 4614):
+  player_id: 0 null values
+
+  transfer_date: 0 null values
+
+  transfer_season: 0 null values
+
+  from_club_id: 0 null values
+
+  to_club_id: 0 null values
+
+  transfer_fee: 0 null values
+
+  player_country_of_birth: 0 null values
+
+  player_position: 0 null values
+
+  player_sub_position: 0 null values
+
+  player_foot: 0 null values
+
+  player_height_cm: 0 null values
+
+  player_date_of_birth: 0 null values
+
+  player_age_at_transfer: 0 null values
+
+  player_avg_yellow_cards_total: 0 null values
+
+  player_avg_yellow_cards_last_season: 0 null values
+
+  player_avg_yellow_cards_last_3_seasons: 0 null values
+
+  player_avg_red_cards_total: 0 null values
+
+  player_avg_red_cards_last_season: 0 null values
+
+  player_avg_goals_total: 0 null values
+
+  player_avg_goals_last_season: 0 null values
+
+  player_avg_assists_total: 0 null values
+
+  player_avg_assists_last_season: 0 null values
+
+  player_avg_minutes_played_total: 0 null values
+
+  player_avg_minutes_played_last_season: 0 null values
+
+  player_avg_attendance_total: 0 null values
+
+  player_avg_attendance_last_season: 0 null values
+
+  player_avg_attendance_last_3_seasons: 0 null values
+
+  player_appearances_total: 0 null values
+
+  player_appearances_last_season: 0 null values
+
+  player_appearances_last_3_seasons: 0 null values
+
+  player_appearances_top_national_total: 0 null values
+
+  player_appearances_top_national_last_season: 0 null values
+
+  player_appearances_top_national_last_3_seasons: 0 null values
+
+  player_appearances_top_continental_total: 0 null values
+
+  player_appearances_top_continental_last_season: 0 null values
+
+  player_appearances_top_continental_last_3_seasons: 0 null values
+
+  player_last_valuation: 0 null values
+
+  player_highest_valuation: 0 null values
+
+  player_highest_valuation_last_year: 0 null values
+
+  player_highest_valuation_last_3_years: 0 null values
+
+  player_avg_valuation: 0 null values
+
+  player_avg_valuation_last_year: 0 null values
+
+  player_avg_valuation_last_3_years: 0 null values
+
+  from_club_domestic_competition_id: 0 null values
+
+  to_club_domestic_competition_id: 0 null values
+
+  from_club_national_team_players: 0 null values
+
+  to_club_national_team_players: 0 null values
+
+  from_club_net_transfer_record: 0 null values
+
+  to_club_net_transfer_record: 0 null values
+
+  from_club_average_age: 0 null values
+
+  to_club_average_age: 0 null values
+
+  from_club_stadium_seats: 0 null values
+
+  to_club_stadium_seats: 0 null values
+
+  from_club_squad_size: 0 null values
+
+  to_club_squad_size: 0 null values
+
+  from_club_is_top_national: 0 null values
+
+  to_club_is_top_national: 0 null values
+
+  from_club_to_club_transfers: 0 null values
+
+  from_club_avg_sell_value: 0 null values
+
+  to_club_avg_buy_value: 0 null values
+
+  from_club_avg_sell_value_same_position: 0 null values
+
+  to_club_avg_buy_value_same_position: 0 null values
+
+  player_avg_red_cards_last_3_seasons: 0 null values
+
+  player_avg_goals_last_3_seasons: 0 null values
+
+  player_avg_assists_last_3_seasons: 0 null values
+
+  player_avg_minutes_played_last_3_seasons: 0 null values
+

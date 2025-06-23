@@ -10,14 +10,18 @@ from load_dataset import load_dataset
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", message="Could not infer format")
 
-def validate_and_add_feature(df, column_name, calculation_function):
-    if column_name not in df.columns:
-        print(f"Adding missing feature: {column_name}")
-        df[column_name] = calculation_function(df)
-    else:
-        print(f"Feature {column_name} already exists. Skipping.")
 
 def run_feature_engineering(output_dir, current_file=None):
+    def validate_and_add_feature(df, column_name, calculation_function):
+        if column_name not in df.columns:
+            print(f"Adding missing feature: {column_name}")
+            df[column_name] = calculation_function(df)
+            # Save intermediate result after adding each feature
+            sv_path = os.path.join(output_dir, "feature_engineered_transfers_sv.csv")
+            df.to_csv(sv_path, index=False)
+        else:
+            print(f"Feature {column_name} already exists. Skipping.")
+
     # Load dataset
     dataset = load_dataset()
 
@@ -45,72 +49,48 @@ def run_feature_engineering(output_dir, current_file=None):
         print(f"Creating new dataframe.")
         feature_engineered_transfers = pd.DataFrame(transfers_df.drop(columns=['market_value_in_eur'], errors='ignore'))
 
-    # Player direct features
+     # Player direct features
     validate_and_add_feature(
         feature_engineered_transfers,
         'player_country_of_birth',
-        lambda df: df.merge(
-            players_df[['player_id', 'country_of_birth']].rename(
-                columns={'country_of_birth': 'player_country_of_birth'}
-            ),
-            on='player_id',
-            how='left'
-        )['player_country_of_birth']
+        lambda df: df['player_id'].map(
+            players_df.set_index('player_id')['country_of_birth']
+        )
     )
     validate_and_add_feature(
         feature_engineered_transfers,
         'player_position',
-        lambda df: df.merge(
-            players_df[['player_id', 'position']].rename(
-                columns={'position': 'player_position'}
-            ),
-            on='player_id',
-            how='left'
-        )['player_position']
+        lambda df: df['player_id'].map(
+            players_df.set_index('player_id')['position']
+        )
     )
     validate_and_add_feature(
         feature_engineered_transfers,
         'player_sub_position',
-        lambda df: df.merge(
-            players_df[['player_id', 'sub_position']].rename(
-                columns={'sub_position': 'player_sub_position'}
-            ),
-            on='player_id',
-            how='left'
-        )['player_sub_position']
+        lambda df: df['player_id'].map(
+            players_df.set_index('player_id')['sub_position']
+        )
     )
     validate_and_add_feature(
         feature_engineered_transfers,
         'player_foot',
-        lambda df: df.merge(
-            players_df[['player_id', 'foot']].rename(
-                columns={'foot': 'player_foot'}
-            ),
-            on='player_id',
-            how='left'
-        )['player_foot']
+        lambda df: df['player_id'].map(
+            players_df.set_index('player_id')['foot']
+        )
     )
     validate_and_add_feature(
         feature_engineered_transfers,
         'player_height_cm',
-        lambda df: df.merge(
-            players_df[['player_id', 'height_in_cm']].rename(
-                columns={'height_in_cm': 'player_height_cm'}
-            ),
-            on='player_id',
-            how='left'
-        )['player_height_cm']
+        lambda df: df['player_id'].map(
+            players_df.set_index('player_id')['height_in_cm']
+        )
     )
     validate_and_add_feature(
         feature_engineered_transfers,
         'player_date_of_birth',
-        lambda df: df.merge(
-            players_df[['player_id', 'date_of_birth']].rename(
-                columns={'date_of_birth': 'player_date_of_birth'}
-            ),
-            on='player_id',
-            how='left'
-        )['player_date_of_birth']
+        lambda df: df['player_id'].map(
+            players_df.set_index('player_id')['date_of_birth']
+        )
     )
     validate_and_add_feature(
         feature_engineered_transfers,
@@ -194,7 +174,7 @@ def run_feature_engineering(output_dir, current_file=None):
                 (appearances_df['season'] >= row['transfer_season'] - 3)
             ]['red_cards'].mean(),
             axis=1
-        )
+        ).fillna(-1)
     )
     ## Average of goals (appearances.goals)
     validate_and_add_feature(
@@ -230,7 +210,7 @@ def run_feature_engineering(output_dir, current_file=None):
                 (appearances_df['season'] >= row['transfer_season'] - 3)
             ]['goals'].mean(),
             axis=1
-        )
+        ).fillna(-1)
     )
     ## Average of assists (appearances.assists)
     validate_and_add_feature(
@@ -266,7 +246,7 @@ def run_feature_engineering(output_dir, current_file=None):
                 (appearances_df['season'] >= row['transfer_season'] - 3)
             ]['assists'].mean(),
             axis=1
-        )
+        ).fillna(-1)
     )
     ## Average of minutes_played (appearances.minutes_played)
     validate_and_add_feature(
@@ -302,7 +282,7 @@ def run_feature_engineering(output_dir, current_file=None):
                 (appearances_df['season'] >= row['transfer_season'] - 3)
             ]['minutes_played'].mean(),
             axis=1
-        )
+        ).fillna(-1)
     )
     ## Average of attendance (appearances.attendance)
     validate_and_add_feature(
@@ -340,7 +320,7 @@ def run_feature_engineering(output_dir, current_file=None):
             axis=1
         ).fillna(-1)
     )
-    ## Number of appearances
+    # Number of appearances
     validate_and_add_feature(
         feature_engineered_transfers,
         'player_appearances_total',
@@ -352,6 +332,8 @@ def run_feature_engineering(output_dir, current_file=None):
             axis=1
         ).fillna(-1)
     )
+    # Drop rows where player_appearances_total < 0
+    feature_engineered_transfers = feature_engineered_transfers[feature_engineered_transfers['player_appearances_total'] > 0].reset_index(drop=True)
     validate_and_add_feature(
         feature_engineered_transfers,
         'player_appearances_last_season',

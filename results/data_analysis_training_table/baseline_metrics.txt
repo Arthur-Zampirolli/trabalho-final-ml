@@ -1,0 +1,5 @@
+Baseline metrics (player_last_valuation vs transfer_fee):
+  Mean Squared Error (MSE): 50091093397919.3750
+  Root Mean Squared Error (RMSE): 7077506.1567
+  Mean Absolute Error (MAE): 3671006.9354
+  R2 Score: 0.7473

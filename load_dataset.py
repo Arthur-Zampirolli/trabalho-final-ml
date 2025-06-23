@@ -19,7 +19,7 @@ def to_category(series, categories, missing_value_category="Missing"):
   series = series.astype(pd.CategoricalDtype(categories=categories, ordered=True))
   return series
 
-def load_transfers(dataset_path):
+def load_transfers(dataset_path, clubs_df=None):
   transfers_df = pd.read_csv(
     os.path.join(dataset_path, "transfers.csv"),
     parse_dates=["transfer_date"],
@@ -51,7 +51,6 @@ def load_transfers(dataset_path):
     }
   )
 
-  
   # Filter only transfers with transfer_fee and market_value_in_eur not null and greater than 0
   transfers_df = transfers_df[
     transfers_df["transfer_fee"].notnull() & 
@@ -59,6 +58,20 @@ def load_transfers(dataset_path):
     transfers_df["market_value_in_eur"].notnull() &
     (transfers_df["market_value_in_eur"] > 0)
   ]
+
+  # Remove transfers from player id 79642 (not existent in players database)
+  transfers_df = transfers_df[transfers_df["player_id"] != 79642]
+
+  # Filter transfers after 2012-07-03 (first record of appearances)
+  transfers_df = transfers_df[transfers_df["transfer_date"] > pd.Timestamp("2012-07-03")]
+
+  # If clubs_df is provided, filter only transfers where both from_club_id and to_club_id are present in clubs_df
+  if clubs_df is not None:
+    valid_club_ids = set(clubs_df["club_id"].unique())
+    transfers_df = transfers_df[
+      transfers_df["from_club_id"].isin(valid_club_ids) &
+      transfers_df["to_club_id"].isin(valid_club_ids)
+    ]
 
   transfers_df["transfer_season"] = transfers_df["transfer_season"].apply(season_to_year)
   
@@ -476,9 +489,9 @@ def load_dataset() :
   files = os.listdir(path)
   print("Files in dataset:", files)
 
-  transfers_df = load_transfers(path) # Target table for the job (transfer_fee column)
-
   clubs_df = load_clubs(path)
+  transfers_df = load_transfers(path, clubs_df) # Target table for the job (transfer_fee column)
+
   competitions_df = load_competitions(path)
   games_df = load_games(path)
 
