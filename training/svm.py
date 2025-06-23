@@ -15,7 +15,6 @@ from sklearn.metrics import mean_absolute_error, r2_score
 from codecarbon import EmissionsTracker
 
 from load_training_table import load_training_table
-from sklearn.model_selection import cross_val_score
 
 def run_decision_tree(target_column, output_dir):
   # Start CodeCarbon tracker
@@ -28,16 +27,16 @@ def run_decision_tree(target_column, output_dir):
   y = data[target_column]
 
   # Drop valuation columns if they exist
-  # columns_to_drop = [
-  #   "player_last_valuation",
-  #   "player_highest_valuation",
-  #   "player_highest_valuation_last_year",
-  #   "player_highest_valuation_last_3_years",
-  #   "player_avg_valuation",
-  #   "player_avg_valuation_last_year",
-  #   "player_avg_valuation_last_3_years"
-  # ]
-  # X = X.drop(columns=[col for col in columns_to_drop if col in X.columns])
+  columns_to_drop = [
+    "player_last_valuation",
+    "player_highest_valuation",
+    "player_highest_valuation_last_year",
+    "player_highest_valuation_last_3_years",
+    "player_avg_valuation",
+    "player_avg_valuation_last_year",
+    "player_avg_valuation_last_3_years"
+  ]
+  X = X.drop(columns=[col for col in columns_to_drop if col in X.columns])
 
   # Split data into training and testing sets
   X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -66,8 +65,11 @@ def run_decision_tree(target_column, output_dir):
   # Predict on the test set
   y_pred = regressor.predict(X_test)
 
+  # Print the best hyperparameters
+  print(f"Best hyperparameters: {grid_search.best_params_}")
+
   # Stop CodeCarbon tracker and get emissions/energy data
-  tracker.stop()
+  emissions_data = tracker.stop()
 
   # Calculate Mean Squared Error
   mse = mean_squared_error(y_test, y_pred)
@@ -81,12 +83,6 @@ def run_decision_tree(target_column, output_dir):
   r2 = r2_score(y_test, y_pred)
   print(f"R-squared: {r2}")
 
-  # 5-fold cross-validation on the training set
-  cv_scores = cross_val_score(regressor, X_train, y_train, cv=5, scoring='neg_mean_squared_error')
-  cv_rmse_scores = np.sqrt(-cv_scores)
-  print(f"5-fold CV RMSE scores: {cv_rmse_scores}")
-  print(f"5-fold CV RMSE mean: {cv_rmse_scores.mean()}, std: {cv_rmse_scores.std()}")
-
   # Save metrics and emissions to a txt file
   os.makedirs(output_dir, exist_ok=True)
   metrics_path = os.path.join(output_dir, "decision_tree_metrics.txt")
@@ -96,7 +92,6 @@ def run_decision_tree(target_column, output_dir):
       f.write(f"RMSE: {rmse}\n")
       f.write(f"MAE: {mae}\n")
       f.write(f"R-squared: {r2}\n")
-      f.write(f"5-fold CV RMSE mean: {cv_rmse_scores.mean()}, std: {cv_rmse_scores.std()}\n")
   print(f"Metrics saved to {metrics_path}")
 
   # Save decision tree image
