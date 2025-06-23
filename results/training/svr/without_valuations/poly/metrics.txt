@@ -1,0 +1,5 @@
+Best hyperparameters: {'C': 1, 'coef0': 1, 'degree': 2, 'epsilon': 0.1, 'gamma': 'scale', 'kernel': 'poly'}
+Mean Squared Error on test set: 77356863584804.47
+RMSE: 8795275.071582723
+MAE: 4589216.63836637
+R-squared (5 fold CV): 0.6797534047082698

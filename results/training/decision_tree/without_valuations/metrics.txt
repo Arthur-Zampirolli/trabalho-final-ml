@@ -1,6 +1,6 @@
-Best hyperparameters: {'max_depth': 5, 'max_features': None, 'min_samples_leaf': 4, 'min_samples_split': 2}
-Mean Squared Error on test set: 131108453449612.94
-RMSE: 11450259.973014278
-MAE: 5907828.9640114065
-R-squared: 0.3693632256572563
-5-fold CV RMSE mean: 10674534.895146031, std: 1217734.3639395589
+Best hyperparameters: {'max_depth': 5, 'max_features': None, 'min_samples_leaf': 4, 'min_samples_split': 10}
+Mean Squared Error on test set: 53854470018231.04
+RMSE: 7338560.486786972
+MAE: 4131277.2298355573
+R-squared: 0.6908742497386033
+5-fold CV RMSE mean: 7653263.074632677, std: 584640.1783016179

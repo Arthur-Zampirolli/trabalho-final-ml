@@ -1,6 +1,9 @@
 import pandas as pd
 
-def load_training_table(filepath="results/features_engineering_manual/feature_engineered_transfers.csv", category_encode=False):
+def load_training_table(
+        filepath="results/features_engineering_manual/feature_engineered_transfers.csv",
+        category_encode=False,
+    ):
     dtype = {
         # Identifiers
         "player_id": int,
@@ -100,6 +103,7 @@ def load_training_table(filepath="results/features_engineering_manual/feature_en
         if category_encode:
             df["from_club_domestic_competition_id"] = df["from_club_domestic_competition_id"].cat.codes
             df["to_club_domestic_competition_id"] = df["to_club_domestic_competition_id"].cat.codes
+
     # All other categorical columns
     for col in category_columns:
         if col in df.columns and col not in ["from_club_domestic_competition_id", "to_club_domestic_competition_id"]:

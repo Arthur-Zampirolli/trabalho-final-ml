@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ALGORITHM="decision_tree"  # Specify the algorithm to use
+ALGORITHM="svr"  # Specify the algorithm to use
 OUTPUT_DIR="./../results/training/$ALGORITHM"
 TARGET_COLUMN="transfer_fee"
 
