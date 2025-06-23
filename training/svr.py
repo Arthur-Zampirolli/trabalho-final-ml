@@ -3,10 +3,12 @@ import click
 import numpy as np
 import matplotlib.pyplot as plt
 
+from sklearn.feature_selection import SelectKBest, f_regression, mutual_info_regression
+from sklearn.pipeline import Pipeline
 from sklearn.svm import SVR
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from sklearn.preprocessing import RobustScaler
-from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, train_test_split
 
 from codecarbon import EmissionsTracker
 
@@ -56,53 +58,34 @@ def run_svr(target_column, output_dir):
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
 
-    # Define parameter grid for SVR
-    param_grid = [
-        # Best linear hyperparameters (from previous runs)
-        # {'C': [1], 'epsilon': [0.1], 'kernel': ['linear']},
-        # Best RBF hyperparameters (from previous runs)
-        {'kernel': ['rbf'], 'C': [10], 'epsilon': [0.2], 'gamma': ['scale']},
-        # Best polynomial hyperparameters (from previous runs)
-        # {'C': [1], 'coef0': [1], 'degree': [2], 'epsilon': [0.1], 'gamma': ['scale'], 'kernel': ['poly']},
-        # Best sigmoid hyperparameters (from previous runs)
-        # {'C': [0.1], 'coef0': [1], 'epsilon': [0.5], 'gamma': ['scale'], 'kernel': ['sigmoid']},
+    pipe = Pipeline([
+        ('selector', SelectKBest()),         # Etapa de seleção
+        ('scaler', RobustScaler()),           # Escalonamento
+        ('svr', SVR(kernel='rbf'))            # Modelo SVR
+    ])
 
-        # RBF Kernel (your best performer)
-        # {
-        #     'kernel': ['rbf'],
-        #     'C': [1, 10, 50, 100, 200],
-        #     'epsilon': [0.005, 0.01, 0.05, 0.1, 0.2],
-        #     'gamma': ['scale', 'auto', 0.01, 0.1, 1.0]
-        # },
-        # # Linear Kernel (simpler model)
-        # Polynomial Kernel (captures interactions)
-        # {
-        #     'kernel': ['poly'],
-        #     'degree': [2, 3],          # Higher degrees risk overfitting
-        #     'C': [1, 10, 100],
-        #     'gamma': ['scale', 'auto'],
-        #     'epsilon': [0.1, 1.0],
-        #     'coef0': [0, 1]            # Constant term in kernel function
-        # },
-        # Sigmoid Kernel (neural network-like)
-        # {
-        #     'kernel': ['sigmoid'],
-        #     'C': [0.1, 1, 10],
-        #     'gamma': ['scale', 0.1, 1],
-        #     'epsilon': [0.1, 0.5],
-        #     'coef0': [0, 0.5, 1]
-        # }
-    ]
-    # Set up GridSearchCV
+    params = {
+        'selector__score_func': [f_regression, mutual_info_regression],
+        'selector__k': [5, 10, 15, 20, 'all'],  # Testar diferentes números de features
+        'svr__C': [0.1, 1, 10, 100],
+        'svr__epsilon': [0.01, 0.05, 0.1, 0.2, 0.5],
+        'svr__kernel': ['rbf'],
+        'svr__gamma': ['scale', 'auto'] + [0.01, 0.1, 1]
+    }
+
+    # Set up RandomizedSearchCV
     grid_search = GridSearchCV(
-        SVR(),
-        param_grid,
-        cv=5,
+        pipe, 
+        params, 
         scoring='r2',
-        n_jobs=-1,
+        cv=5,
         verbose=3,
+        n_jobs=-1
     )
     grid_search.fit(X_train_scaled, y_train_log)
+
+    selected_features = grid_search.best_estimator_.named_steps['selector'].get_support()
+    print("Features selecionadas:", X_train.columns[selected_features])
 
     # Use the best estimator found by grid search
     best_regressor = grid_search.best_estimator_
@@ -134,6 +117,7 @@ def run_svr(target_column, output_dir):
     metrics_path = os.path.join(output_dir, "metrics.txt")
     with open(metrics_path, "w") as f:
         f.write(f"Best hyperparameters: {grid_search.best_params_}\n")
+        f.write(f"Selected features: {X_train.columns[selected_features].tolist()}\n")
         f.write(f"Mean Squared Error on test set: {mse}\n")
         f.write(f"RMSE: {rmse}\n")
         f.write(f"MAE: {mae}\n")
