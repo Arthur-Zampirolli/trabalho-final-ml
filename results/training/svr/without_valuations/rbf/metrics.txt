@@ -1,6 +1,7 @@
-Best hyperparameters: {'selector__k': 'all', 'selector__score_func': <function f_regression at 0x10fce1300>, 'svr__C': 10, 'svr__epsilon': 0.2, 'svr__gamma': 'scale', 'svr__kernel': 'rbf'}
-Selected features: ['player_id', 'transfer_date', 'transfer_season', 'from_club_id', 'to_club_id', 'player_country_of_birth', 'player_position', 'player_sub_position', 'player_foot', 'player_height_cm', 'player_date_of_birth', 'player_age_at_transfer', 'player_avg_yellow_cards_total', 'player_avg_yellow_cards_last_season', 'player_avg_yellow_cards_last_3_seasons', 'player_avg_red_cards_total', 'player_avg_red_cards_last_season', 'player_avg_goals_total', 'player_avg_goals_last_season', 'player_avg_assists_total', 'player_avg_assists_last_season', 'player_avg_minutes_played_total', 'player_avg_minutes_played_last_season', 'player_avg_attendance_total', 'player_avg_attendance_last_season', 'player_avg_attendance_last_3_seasons', 'player_appearances_total', 'player_appearances_last_season', 'player_appearances_last_3_seasons', 'player_appearances_top_national_total', 'player_appearances_top_national_last_season', 'player_appearances_top_national_last_3_seasons', 'player_appearances_top_continental_total', 'player_appearances_top_continental_last_season', 'player_appearances_top_continental_last_3_seasons', 'from_club_domestic_competition_id', 'to_club_domestic_competition_id', 'from_club_national_team_players', 'to_club_national_team_players', 'from_club_net_transfer_record', 'to_club_net_transfer_record', 'from_club_average_age', 'to_club_average_age', 'from_club_stadium_seats', 'to_club_stadium_seats', 'from_club_squad_size', 'to_club_squad_size', 'from_club_is_top_national', 'to_club_is_top_national', 'from_club_to_club_transfers', 'from_club_avg_sell_value', 'to_club_avg_buy_value', 'from_club_avg_sell_value_same_position', 'to_club_avg_buy_value_same_position', 'player_avg_red_cards_last_3_seasons', 'player_avg_goals_last_3_seasons', 'player_avg_assists_last_3_seasons', 'player_avg_minutes_played_last_3_seasons']
-Mean Squared Error on test set: 80238636247141.66
-RMSE: 8957602.148295138
-MAE: 4504022.4551652325
-R-squared (5 fold CV): 0.6911148085939745
+Best hyperparameters: {'feature_selection__k': 'all', 'svr__C': 10, 'svr__epsilon': 0.1, 'svr__gamma': 0.01, 'svr__kernel': 'rbf'}
+MAE (test set): $4,675,158.33
+R-squared (test set): 0.5874
+MAE (CV): $4,417,910.90 ± $216,062.67
+R-squared (CV): 0.5947 ± 0.0448
+Emissions: nan kg CO2
+Energy: nan kWh

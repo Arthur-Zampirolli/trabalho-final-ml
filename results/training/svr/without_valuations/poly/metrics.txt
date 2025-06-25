@@ -1,5 +1,7 @@
-Best hyperparameters: {'C': 1, 'coef0': 1, 'degree': 2, 'epsilon': 0.1, 'gamma': 'scale', 'kernel': 'poly'}
-Mean Squared Error on test set: 77356863584804.47
-RMSE: 8795275.071582723
-MAE: 4589216.63836637
-R-squared (5 fold CV): 0.6797534047082698
+Best hyperparameters: {'svr__C': 10, 'svr__degree': 2, 'svr__epsilon': 0.2, 'svr__gamma': 'scale', 'svr__kernel': 'poly'}
+MAE (test set): $5,317,248.80
+R-squared (test set): 0.4410
+MAE (CV): $6,201,174.24 ± $1,208,769.44
+R-squared (CV): -3.6253 ± 5.1361
+Emissions: 1.620426312309418e-05 kg CO2
+Energy: 0.00016476454145579147 kWh

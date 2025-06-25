@@ -3,12 +3,12 @@ import click
 import numpy as np
 import matplotlib.pyplot as plt
 
-from sklearn.feature_selection import SelectKBest, f_regression, mutual_info_regression
+from sklearn.feature_selection import SelectKBest, f_regression
 from sklearn.pipeline import Pipeline
 from sklearn.svm import SVR
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.metrics import mean_absolute_error, r2_score, make_scorer
 from sklearn.preprocessing import RobustScaler
-from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, train_test_split
+from sklearn.model_selection import GridSearchCV, cross_val_score, train_test_split
 
 from codecarbon import EmissionsTracker
 
@@ -25,18 +25,7 @@ def run_svr(target_column, output_dir):
         category_encode=True,
     )
     X = data.drop(columns=[target_column])
-    y = data[target_column]
-
-    # Apply log-transform to the target to normalize its distribution
-    y_log = np.log1p(y)  # Use log(1+x) to avoid issues with zeros
-
-    X_train, X_test, y_train_log, _ = train_test_split(
-        X, y_log, test_size=0.2, random_state=42
-    )
-
-    _, _, _, y_test_orig = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
+    y = data[target_column]  # Keep target in original scale for final evaluation
 
     # Drop valuation columns if they exist
     # columns_to_drop = [
@@ -48,106 +37,121 @@ def run_svr(target_column, output_dir):
     #     "player_avg_valuation_last_year",
     #     "player_avg_valuation_last_3_years"
     # ]
-    # cols_to_drop = [col for col in columns_to_drop if col in X_train.columns]
-    # # Drop from original DataFrames
-    # X_train = X_train.drop(columns=cols_to_drop)
-    # X_test = X_test.drop(columns=cols_to_drop)
+    # X = X.drop(columns=[col for col in columns_to_drop if col in X.columns])
 
-    # Normalize features between 0 and 1
-    scaler = RobustScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
+    # Split data into train and test sets
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
 
+    # Apply log transformation to training target
+    y_train_log = np.log1p(y_train)
+
+    # Build pipeline: feature selection, scaling and SVR model
     pipe = Pipeline([
-        ('selector', SelectKBest()),         # Etapa de seleção
-        ('scaler', RobustScaler()),           # Escalonamento
-        ('svr', SVR(kernel='rbf'))            # Modelo SVR
+        ('feature_selection', SelectKBest(score_func=f_regression)),
+        ('scaler', RobustScaler()),
+        ('svr', SVR(kernel='rbf'))
     ])
 
     params = {
-        'selector__score_func': [f_regression, mutual_info_regression],
-        'selector__k': [5, 10, 15, 20, 'all'],  # Testar diferentes números de features
-        'svr__C': [0.1, 1, 10, 100],
-        'svr__epsilon': [0.01, 0.05, 0.1, 0.2, 0.5],
+        'feature_selection__k': [20],
         'svr__kernel': ['rbf'],
-        'svr__gamma': ['scale', 'auto'] + [0.01, 0.1, 1]
+        'svr__C': [1],
+        'svr__epsilon': [0.01],
+        'svr__gamma': [0.01]
     }
 
-    # Set up RandomizedSearchCV
+    # Create custom scorer for MAE in currrency
+    mae_currrency_scorer = make_scorer(
+        lambda y_true_log, y_pred_log: -mean_absolute_error(
+            np.expm1(y_true_log),
+            np.expm1(y_pred_log)
+        )
+    )
+
+    # Set up GridSearchCV with custom scorer
     grid_search = GridSearchCV(
         pipe, 
         params, 
-        scoring='r2',
+        scoring=mae_currrency_scorer,  # Use currrency MAE for optimization
         cv=5,
         verbose=3,
         n_jobs=-1
     )
-    grid_search.fit(X_train_scaled, y_train_log)
+    grid_search.fit(X_train, y_train_log)
 
-    selected_features = grid_search.best_estimator_.named_steps['selector'].get_support()
-    print("Features selecionadas:", X_train.columns[selected_features])
-
-    # Use the best estimator found by grid search
+    # Use the best estimator
     best_regressor = grid_search.best_estimator_
     print(f"Best hyperparameters: {grid_search.best_params_}")
 
-    # Train the regressor
-    y_pred_log = best_regressor.predict(X_test_scaled)
-
-    # Predict on the test set
-    y_pred_orig = np.expm1(y_pred_log)
-
-    # Stop CodeCarbon tracker and get emissions/energy data
+    # Stop CodeCarbon tracker
     tracker.stop()
 
-    # Calculate Mean Squared Error
-    mse = mean_squared_error(y_test_orig, y_pred_orig)
-    print(f"Mean Squared Error on test set: {mse}")
-    rmse = np.sqrt(mse)
-    print(f"RMSE: {rmse}")
-    # Calculate Mean Absolute Error
-    mae = mean_absolute_error(y_test_orig, y_pred_orig)
-    print(f"MAE: {mae}")
-    # Calculate R-squared
-    r2 = grid_search.best_score_
-    print(f"R-squared: {r2}")
+    # Predict on test set
+    y_pred_log = best_regressor.predict(X_test)
+    y_pred = np.expm1(y_pred_log)  # Convert back to currrency
 
-    # Save metrics and emissions to a txt file
+    # Calculate metrics in currrency
+    mae_test = mean_absolute_error(y_test, y_pred)
+    r2_test = r2_score(y_test, y_pred)
+    print(f"MAE (test set): ${mae_test:,.2f}")
+    print(f"R-squared (test set): {r2_test:.4f}")
+    
+    # Custom scoring functions for CV in currrency
+    def mae_currrency_scorer_cv(estimator, X, y_log):
+        y_pred_log = estimator.predict(X)
+        return mean_absolute_error(np.expm1(y_log), np.expm1(y_pred_log))
+    
+    def r2_currrency_scorer_cv(estimator, X, y_log):
+        y_pred_log = estimator.predict(X)
+        return r2_score(np.expm1(y_log), np.expm1(y_pred_log))
+
+    # Calculate cross-validated metrics in currrency
+    cv_mae = cross_val_score(
+        best_regressor, X_train, y_train_log, 
+        cv=5, scoring=mae_currrency_scorer_cv
+    )
+    print(f"MAE (CV): ${cv_mae.mean():,.2f} ± ${cv_mae.std():,.2f}")
+    cv_r2 = cross_val_score(
+        best_regressor, X_train, y_train_log, 
+        cv=5, scoring=r2_currrency_scorer_cv
+    )
+    print(f"R-squared (CV): {cv_r2.mean():.4f} ± {cv_r2.std():.4f}")
+
+    # Save metrics and emissions
     os.makedirs(output_dir, exist_ok=True)
     metrics_path = os.path.join(output_dir, "metrics.txt")
     with open(metrics_path, "w") as f:
         f.write(f"Best hyperparameters: {grid_search.best_params_}\n")
-        f.write(f"Selected features: {X_train.columns[selected_features].tolist()}\n")
-        f.write(f"Mean Squared Error on test set: {mse}\n")
-        f.write(f"RMSE: {rmse}\n")
-        f.write(f"MAE: {mae}\n")
-        f.write(f"R-squared (5 fold CV): {r2}\n")
+        f.write(f"MAE (test set): ${mae_test:,.2f}\n")
+        f.write(f"R-squared (test set): {r2_test:.4f}\n")
+        f.write(f"MAE (CV): ${cv_mae.mean():,.2f} ± ${cv_mae.std():,.2f}\n")
+        f.write(f"R-squared (CV): {cv_r2.mean():.4f} ± {cv_r2.std():.4f}\n")
+        f.write(f"Emissions: {getattr(tracker.final_emissions_data, 'emissions', 'N/A')} kg CO2\n")
+        f.write(f"Energy: {getattr(tracker.final_emissions_data, 'energy_consumed', 'N/A')} kWh\n")
     print(f"Metrics saved to {metrics_path}")
 
-    # Plot and save bar chart of predicted vs true values for a sample
-    sample_size = min(100, len(y_test_orig))
-    # Ensure alignment by using iloc and numpy arrays
-    y_test_sample = y_test_orig.iloc[:sample_size].to_numpy()
-    y_pred_sample = y_pred_orig[:sample_size]
-
+    # Plot in currrency
+    sample_size = min(100, len(y_test))
     plt.figure(figsize=(12, 6))
-    width = 0.35
     indices = np.arange(sample_size)
-    plt.bar(indices, y_test_sample, width=width, label='True Values')
-    plt.bar(indices + width, y_pred_sample, width=width, label='Predicted Values')
+    width = 0.35
+    plt.bar(indices, y_test.iloc[:sample_size], width, label='True Values')
+    plt.bar(indices + width, y_pred[:sample_size], width, label='Predicted Values')
     plt.xlabel("Sample Index")
-    plt.ylabel("Value")
-    plt.title("Bar Chart: Predicted vs True Values (Sample)")
+    plt.ylabel("Transfer Fee ($)")
+    plt.title("Predicted vs True Transfer Fees")
     plt.legend()
     plt.tight_layout()
-    bar_chart_path = os.path.join(output_dir, "bar_predicted_vs_true.png")
-    plt.savefig(bar_chart_path, dpi=200, bbox_inches='tight')
+    bar_chart_path = os.path.join(output_dir, "predicted_vs_true.png")
+    plt.savefig(bar_chart_path, dpi=200)
     plt.close()
-    print(f"Bar chart of predicted vs true values saved to {bar_chart_path}")
+    print(f"Bar chart saved to {bar_chart_path}")
 
 @click.command()
 @click.option('--target-column', default='transfer_fee', help='Target column for regression')
-@click.option('--output-dir', default='.', help='Directory to save output CSV files')
+@click.option('--output-dir', default='.', help='Output directory')
 def main(target_column, output_dir):
     run_svr(target_column, output_dir)
 

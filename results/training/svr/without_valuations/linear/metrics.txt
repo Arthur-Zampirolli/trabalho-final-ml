@@ -1,5 +1,7 @@
-Best hyperparameters: {'C': 1, 'epsilon': 0.1, 'kernel': 'linear'}
-Mean Squared Error on test set: 124719604189577.8
-RMSE: 11167793.165598018
-MAE: 5107088.461023167
-R-squared (5 fold CV): 0.6715191584698507
+Best hyperparameters: {'svr__C': 10, 'svr__epsilon': 0.05, 'svr__kernel': 'linear'}
+MAE (test set): $5,125,497.63
+R-squared (test set): 0.3840
+MAE (CV): $4,946,796.10 ± $493,835.96
+R-squared (CV): -0.0384 ± 1.0694
+Emissions: nan kg CO2
+Energy: nan kWh

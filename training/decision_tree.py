@@ -25,16 +25,16 @@ def run_decision_tree(target_column, output_dir):
     y = data[target_column]
 
     # Drop valuation columns if they exist
-    # columns_to_drop = [
-    # "player_last_valuation",
-    # "player_highest_valuation",
-    # "player_highest_valuation_last_year",
-    # "player_highest_valuation_last_3_years",
-    # "player_avg_valuation",
-    # "player_avg_valuation_last_year",
-    # "player_avg_valuation_last_3_years"
-    # ]
-    # X = X.drop(columns=[col for col in columns_to_drop if col in X.columns])
+    columns_to_drop = [
+    "player_last_valuation",
+    "player_highest_valuation",
+    "player_highest_valuation_last_year",
+    "player_highest_valuation_last_3_years",
+    "player_avg_valuation",
+    "player_avg_valuation_last_year",
+    "player_avg_valuation_last_3_years"
+    ]
+    X = X.drop(columns=[col for col in columns_to_drop if col in X.columns])
 
     # Split data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)

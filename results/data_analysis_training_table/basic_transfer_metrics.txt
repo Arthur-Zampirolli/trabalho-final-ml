@@ -1,0 +1,10 @@
+Maior transferência: 180000000.00
+Menor transferência: 1000.00
+Porcentagem de transferências abaixo de 25 milhões: 90.12%
+Porcentagem de transferências acima de 50 milhões: 2.34%
+Moda das transferências: 2000000.00
+
+Média das transferências (ligas destaque): 12701562.00 (3121 transferências)
+Média das transferências (outras ligas): 2977920.96 (1493 transferências)
+Percentual maior da média das ligas destaque em relação às outras: 326.52%
+Média das transferências (GB1): 20370256.03 (871 transferências)

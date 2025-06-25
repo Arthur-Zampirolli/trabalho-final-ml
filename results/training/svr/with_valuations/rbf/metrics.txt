@@ -1,6 +1,7 @@
-Best hyperparameters: {'selector__k': 20, 'selector__score_func': <function f_regression at 0x10da51300>, 'svr__C': 10, 'svr__epsilon': 0.5, 'svr__gamma': 'scale', 'svr__kernel': 'rbf'}
-Selected features: ['player_avg_attendance_total', 'player_avg_attendance_last_season', 'player_avg_attendance_last_3_seasons', 'player_appearances_last_season', 'player_appearances_top_national_last_season', 'player_appearances_top_national_last_3_seasons', 'player_last_valuation', 'player_highest_valuation', 'player_highest_valuation_last_year', 'player_highest_valuation_last_3_years', 'player_avg_valuation', 'player_avg_valuation_last_year', 'player_avg_valuation_last_3_years', 'from_club_national_team_players', 'to_club_national_team_players', 'to_club_stadium_seats', 'to_club_is_top_national', 'from_club_avg_sell_value', 'to_club_avg_buy_value', 'to_club_avg_buy_value_same_position']
-Mean Squared Error on test set: 76527053746018.1
-RMSE: 8747974.265280968
-MAE: 4000983.6130718715
-R-squared (5 fold CV): 0.7652313741562139
+Best hyperparameters: {'feature_selection__k': 20, 'svr__C': 1, 'svr__epsilon': 0.01, 'svr__gamma': 0.01, 'svr__kernel': 'rbf'}
+MAE (test set): $3,584,710.36
+R-squared (test set): 0.7912
+MAE (CV): $3,528,472.95 ± $202,360.40
+R-squared (CV): 0.7345 ± 0.0193
+Emissions: 7.017036466445463e-05 kg CO2
+Energy: 0.0007134905098675583 kWh
