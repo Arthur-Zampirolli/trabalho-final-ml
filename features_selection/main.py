@@ -10,7 +10,7 @@ from load_training_table import load_training_table
 
 def run_rfecv(target_column, output_dir):
     # Load dataset
-    data = load_training_table("../results/features_engineering_manual/feature_engineered_transfers.csv", category_encode=True)
+    data = load_training_table("../results/features_engineering_manual/feature_engineered_transfers_sv.csv", category_encode=True)
     X = data.drop(columns=[target_column])
     y = data[target_column]
 
