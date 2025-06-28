@@ -27,16 +27,16 @@ def run_xgboost(target_column, output_dir):
     y = data[target_column]
 
     # Drop valuation columns if they exist
-    # columns_to_drop = [
-    #     "player_last_valuation",
-    #     "player_highest_valuation",
-    #     "player_highest_valuation_last_year",
-    #     "player_highest_valuation_last_3_years",
-    #     "player_avg_valuation",
-    #     "player_avg_valuation_last_year",
-    #     "player_avg_valuation_last_3_years"
-    # ]
-    # X = X.drop(columns=[col for col in columns_to_drop if col in X.columns])
+    columns_to_drop = [
+        "player_last_valuation",
+        "player_highest_valuation",
+        "player_highest_valuation_last_year",
+        "player_highest_valuation_last_3_years",
+        "player_avg_valuation",
+        "player_avg_valuation_last_year",
+        "player_avg_valuation_last_3_years"
+    ]
+    X = X.drop(columns=[col for col in columns_to_drop if col in X.columns])
 
 
     X_train, X_test, y_train, y_test = train_test_split(
@@ -52,9 +52,9 @@ def run_xgboost(target_column, output_dir):
     ])
 
     params = {
-        'feature_selection__k': [20],
-        'xgb__n_estimators': [100],
-        'xgb__max_depth': [3],
+        'feature_selection__k': [60],
+        'xgb__n_estimators': [150],
+        'xgb__max_depth': [4],
         'xgb__learning_rate': [0.1],
         'xgb__subsample': [0.8],
         'xgb__colsample_bytree': [0.8],
