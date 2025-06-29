@@ -8,7 +8,7 @@ from sklearn.feature_selection import SelectKBest, f_regression
 from sklearn.pipeline import Pipeline
 from xgboost import XGBRegressor
 from sklearn.metrics import mean_absolute_error, r2_score, make_scorer
-from sklearn.preprocessing import RobustScaler
+from sklearn.preprocessing import MinMaxScaler, RobustScaler
 from sklearn.model_selection import GridSearchCV, cross_val_score, train_test_split
 
 from codecarbon import EmissionsTracker
@@ -27,16 +27,16 @@ def run_xgboost(target_column, output_dir):
     y = data[target_column]
 
     # Drop valuation columns if they exist
-    columns_to_drop = [
-        "player_last_valuation",
-        "player_highest_valuation",
-        "player_highest_valuation_last_year",
-        "player_highest_valuation_last_3_years",
-        "player_avg_valuation",
-        "player_avg_valuation_last_year",
-        "player_avg_valuation_last_3_years"
-    ]
-    X = X.drop(columns=[col for col in columns_to_drop if col in X.columns])
+    # columns_to_drop = [
+    #     "player_last_valuation",
+    #     "player_highest_valuation",
+    #     "player_highest_valuation_last_year",
+    #     "player_highest_valuation_last_3_years",
+    #     "player_avg_valuation",
+    #     "player_avg_valuation_last_year",
+    #     "player_avg_valuation_last_3_years"
+    # ]
+    # X = X.drop(columns=[col for col in columns_to_drop if col in X.columns])
 
 
     X_train, X_test, y_train, y_test = train_test_split(
@@ -54,12 +54,12 @@ def run_xgboost(target_column, output_dir):
     params = {
         'feature_selection__k': [60],
         'xgb__n_estimators': [150],
-        'xgb__max_depth': [4],
+        'xgb__max_depth': [3, 4],
         'xgb__learning_rate': [0.1],
-        'xgb__subsample': [0.8],
-        'xgb__colsample_bytree': [0.8],
-        'xgb__reg_alpha': [0],
-        'xgb__reg_lambda': [1]
+        'xgb__subsample': [0.6, 0.8],
+        'xgb__colsample_bytree': [0.8, 1],
+        'xgb__reg_alpha': [0, 0.2, 0.4, 0.],
+        'xgb__reg_lambda': [0.8, 1]
     }
 
     mae_currrency_scorer = make_scorer(
