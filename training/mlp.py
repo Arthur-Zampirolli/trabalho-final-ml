@@ -5,16 +5,16 @@ import matplotlib.pyplot as plt
 
 from sklearn.feature_selection import SelectKBest, f_regression
 from sklearn.pipeline import Pipeline
-from sklearn.svm import SVR
 from sklearn.metrics import mean_absolute_error, r2_score, make_scorer
-from sklearn.preprocessing import RobustScaler
+from sklearn.preprocessing import RobustScaler, QuantileTransformer
 from sklearn.model_selection import GridSearchCV, cross_val_score, train_test_split
+from sklearn.neural_network import MLPRegressor
 
 from codecarbon import EmissionsTracker
 
 from load_training_table import load_training_table
 
-def run_svr(target_column, output_dir):
+def run_mlp(target_column, output_dir):
     # Start CodeCarbon tracker
     tracker = EmissionsTracker(output_dir=output_dir, measure_power_secs=1, log_level="error")
     tracker.start()
@@ -51,15 +51,16 @@ def run_svr(target_column, output_dir):
     pipe = Pipeline([
         ('feature_selection', SelectKBest(score_func=f_regression)),
         ('scaler', RobustScaler()),
-        ('svr', SVR(kernel='rbf'))
+        # ('scaler', QuantileTransformer(output_distribution='normal')),
+        ('mlp', MLPRegressor())
     ])
 
     params = {
         'feature_selection__k': ['all'],
-        'svr__kernel': ['rbf'],
-        'svr__C': [10],
-        'svr__epsilon': [0.1],
-        'svr__gamma': [0.01]
+        'mlp__hidden_layer_sizes': [(512, 256)],
+        'mlp__learning_rate_init': [0.0001],
+        'mlp__learning_rate': ['adaptive'],
+        'mlp__activation': ['tanh'],
     }
 
     # Create custom scorer for MAE in currrency
@@ -153,7 +154,7 @@ def run_svr(target_column, output_dir):
 @click.option('--target-column', default='transfer_fee', help='Target column for regression')
 @click.option('--output-dir', default='.', help='Output directory')
 def main(target_column, output_dir):
-    run_svr(target_column, output_dir)
+    run_mlp(target_column, output_dir)
 
 if __name__ == '__main__':
     main()

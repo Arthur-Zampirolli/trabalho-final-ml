@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ALGORITHM="svr"  # Specify the algorithm to use
+ALGORITHM="xgboost"  # Specify the algorithm to use
 OUTPUT_DIR="./../results/training/$ALGORITHM"
 TARGET_COLUMN="transfer_fee"
 
