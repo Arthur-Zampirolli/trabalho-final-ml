@@ -1,7 +1,7 @@
 import pandas as pd
 
 def load_training_table(
-        filepath="results/features_engineering_manual/feature_engineered_transfers.csv",
+        filepath="training_table.csv",
         category_encode=False,
     ):
     dtype = {

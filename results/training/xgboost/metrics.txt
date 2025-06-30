@@ -1,0 +1,7 @@
+Best hyperparameters: {'learning_rate': 0.05, 'max_depth': 3, 'n_estimators': 300, 'subsample': 0.9}
+MAE (test set): $3,412,813.48
+R-squared (test set): 0.7910
+MAE (CV): $3,280,691.76 ± $204,656.37
+R-squared (CV): 0.7568 ± 0.0318
+Emissions: 7.368082244482674e-06 kg CO2
+Energy: 7.49184756627758e-05 kWh

@@ -1,0 +1,7 @@
+Best hyperparameters: {'feature_selection__k': 'all', 'svr__C': 10, 'svr__epsilon': 0.1, 'svr__gamma': 0.01, 'svr__kernel': 'rbf'}
+MAE (test set): $4,125,878.53
+R-squared (test set): 0.5408
+MAE (CV): $4,056,436.60 ± $336,174.44
+R-squared (CV): 0.6192 ± 0.0564
+Emissions: 1.5909454695168485e-06 kg CO2
+Energy: 1.61766936746741e-05 kWh

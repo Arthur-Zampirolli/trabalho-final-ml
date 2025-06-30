@@ -1,0 +1,7 @@
+Best hyperparameters: {'feature_selection__k': 20, 'mlp__activation': 'tanh', 'mlp__hidden_layer_sizes': (512, 256), 'mlp__learning_rate': 'adaptive', 'mlp__learning_rate_init': 0.0001}
+MAE (test set): $3,535,235.78
+R-squared (test set): 0.7837
+MAE (CV): $3,489,841.87 ± $122,391.03
+R-squared (CV): 0.7269 ± 0.0428
+Emissions: nan kg CO2
+Energy: nan kWh
