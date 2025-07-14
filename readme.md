@@ -42,10 +42,10 @@ Replace `<model>` with one of: `svr`, `xgboost`, `mlp`, or `decision_tree`.
 python training/svr.py --target-column transfer_fee --output-dir results/training/svr/
 ```
 
-### Example: Run Gradient Boosting Training
+### Example: Run XGBoosting Training
 
 ```sh
-python training/xgboost.py --target-column transfer_fee --output-dir results/training/xgboost/
+python training_xg_boost/xg_boost.py --target-column transfer_fee --output-dir results/training/xgboost/
 ```
 
 ### Example: Run MLP Training
